@@ -1,0 +1,23 @@
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: root
+    password: root
+    url: jdbc:mysql://192.168.0.225:3306/mydemo?&useSSL=false&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&transformedBitIsBoolean=true&serverTimezone=GMT%2B8&nullCatalogMeansCurrent=true&autoReconnect=true&failOverReadOnly=false
+mybatis-plus:
+  type-aliases-package: com.manniu.datasync.entity
+  configuration:
+    map-underscore-to-camel-case: true
+manniu:
+  datasync:
+    ip: 127.0.0.1
+    port: 8080
+    saveFile: F:\sjzx
+#    saveFile: F:\file_test\
+  grpc:
+    ip: 192.168.0.223
+    port: 5001
+  task:
+    enable: false
+server:
+  port: 9999
