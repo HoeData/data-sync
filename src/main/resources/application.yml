@@ -9,14 +9,20 @@ mybatis-plus:
   configuration:
     map-underscore-to-camel-case: true
 manniu:
+#  同步目标的IP端口
   datasync:
     ip: 127.0.0.1
     port: 8080
     saveFile: F:\sjzx
 #    saveFile: F:\file_test\
   grpc:
-    ip: 192.168.0.223
-    port: 5001
+    local:
+      ip: 192.168.0.223
+      port: 5001
+  http:
+    remote:
+      ip: 192.168.0.209
+      port: 5000
   task:
     enable: false
 server:
