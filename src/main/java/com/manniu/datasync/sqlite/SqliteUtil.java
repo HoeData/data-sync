@@ -61,38 +61,42 @@ public class SqliteUtil {
         }
     }
     public static void batchInsertSnapshotDoList(List<SnapshotDo> param){
-        if(param.size() == 0) return;
-        try(
-                Connection connection = getConnection();
-                PreparedStatement ps = connection.prepareStatement("INSERT INTO 'sync_snapshot' ('id', 'TagFullName', 'Time', 'Type', 'Value', 'Qualitie') VALUES (?,?,?,?,?,?);");
-                ){
-            for(SnapshotDo snapshotDo : param){
-                ps.setString(1,snapshotDo.getId());
-                ps.setString(2,snapshotDo.getTagFullName());
-                ps.setString(3,snapshotDo.getTime());
-                ps.setInt(4,snapshotDo.getType());
-                ps.setString(5,snapshotDo.getValue());
-                ps.setInt(6,snapshotDo.getQualitie());
-                ps.addBatch();
+        synchronized (SqliteUtil.class){
+            if(param.size() == 0) return;
+            try(
+                    Connection connection = getConnection();
+                    PreparedStatement ps = connection.prepareStatement("INSERT INTO 'sync_snapshot' ('id', 'TagFullName', 'Time', 'Type', 'Value', 'Qualitie') VALUES (?,?,?,?,?,?);");
+            ){
+                for(SnapshotDo snapshotDo : param){
+                    ps.setString(1,snapshotDo.getId());
+                    ps.setString(2,snapshotDo.getTagFullName());
+                    ps.setString(3,snapshotDo.getTime());
+                    ps.setInt(4,snapshotDo.getType());
+                    ps.setString(5,snapshotDo.getValue());
+                    ps.setInt(6,snapshotDo.getQualitie());
+                    ps.addBatch();
+                }
+                ps.executeBatch();
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
             }
-            ps.executeBatch();
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
         }
     }
 
     public static void deleteById(List<String> ids){
-        if(ids.size() == 0) return;
-        String param = ids.stream().map(v -> "?").collect(Collectors.joining(","));
-        try {
-            Connection connection = getConnection();
-            PreparedStatement ps = connection.prepareStatement("DELETE FROM sync_snapshot WHERE id IN ("+param+") ");
-            for (int i = 0; i < ids.size(); i++) {
-                ps.setString(i+1,ids.get(i));
+        synchronized (SqliteUtil.class){
+            if(ids.size() == 0) return;
+            String param = ids.stream().map(v -> "?").collect(Collectors.joining(","));
+            try {
+                Connection connection = getConnection();
+                PreparedStatement ps = connection.prepareStatement("DELETE FROM sync_snapshot WHERE id IN ("+param+") ");
+                for (int i = 0; i < ids.size(); i++) {
+                    ps.setString(i+1,ids.get(i));
+                }
+                ps.executeUpdate();
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
             }
-            ps.executeUpdate();
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
         }
     }
 }

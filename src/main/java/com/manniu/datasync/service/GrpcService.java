@@ -5,9 +5,12 @@ import HoeData.BigData.SnapshotOuterClass;
 import Server.GrpcImp.Enum.MiddleDataType;
 import Until.CreateDate;
 import Until.ProtoUtil;
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.toolkit.IdWorker;
+import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.manniu.datasync.doMain.SnapshotDo;
+import com.manniu.datasync.sqlite.SqliteUtil;
 import com.manniu.datasync.util.ThreadPoolUtil;
 import lombok.Data;
 import org.example.Base.Requst;
@@ -184,14 +187,14 @@ public class GrpcService implements CommandLineRunner {
     //构建消息并且添加到队列
     private void buildMessage(Snapshot snapshot){
         SnapshotDo snapshotDo = new SnapshotDo();
+        snapshotDo.setId(IdWorker.get32UUID());
         snapshotDo.setTagFullName(snapshot.getTagFullName());
         snapshotDo.setTime(LocalDateTime.ofEpochSecond(Long.parseLong(snapshot.getTime()), 0, zoneOffset).format(sf));
         snapshotDo.setValue(snapshot.getValue().toString());
         snapshotDo.setType(snapshot.getType().getValue());
         boolean overflow = QueueService.queue.offer(snapshotDo);
         if(!overflow){
-            //TODO落到磁盘 进行SQLite持久化
-            System.out.println("磁盘持久化"+snapshotDo.getTagFullName()+snapshotDo.getValue());
+            SqliteUtil.batchInsertSnapshotDoList(Collections.singletonList(snapshotDo));
         }
     }
 
@@ -208,16 +211,61 @@ public class GrpcService implements CommandLineRunner {
                 .bodyValue(json.toString())
                 .retrieve()
                 .bodyToMono(String.class)
-//                .onErrorResume(e -> Mono.just(e.getMessage()));
                 .onErrorResume(e -> Mono.just("error"));
         String block = result.block();
         //成功发送并且拿到请求了
         if(!"error".equals(block)){
             SnapshotStatus snapshotStatus = JSONObject.parseObject(block, SnapshotStatus.class);
-            System.out.println(snapshotStatus);
+            //返回的成功下标
+            JSONArray successList = (JSONArray)snapshotStatus.getResult();
+            //找到没成功的下标集合
+            List<Integer> falseIndexList = new ArrayList<>();
+            for (int i = 0; i < successList.size(); i++) {
+                JSONObject obj = successList.getJSONObject(i);
+                Boolean success = obj.getBoolean("Success");
+                if(!success){
+                    falseIndexList.add(i);
+                }
+            }
+            //将没成功的存到SQLite
+            if(!falseIndexList.isEmpty()){
+                List<SnapshotDo> saveDb = falseIndexList.stream().map(snapshotDos::get).collect(Collectors.toList());
+                SqliteUtil.batchInsertSnapshotDoList(saveDb);
+            }
+            //HTTP是通的 从SQLite中倒出来一份放到队列中
+            sqliteTOQueue();
+        }else{
+            //存到SQLite中并且 把队列中都取出来
+            List<SnapshotDo> batchInstall = new ArrayList<>();
+            QueueService.queue.drainTo(batchInstall);
+            batchInstall.addAll(snapshotDos);
+            batchInstall.forEach(v ->{
+                if(!StringUtils.isNotBlank(v.getId())){
+                    v.setId(IdWorker.get32UUID());
+                }
+            });
+            SqliteUtil.batchInsertSnapshotDoList(batchInstall);
         }
 
     }
 
-
+    private void sqliteTOQueue(){
+        //取出一段并且删除
+        List<SnapshotDo> snapshotDos = SqliteUtil.getSnapshotDoList();
+        if(!snapshotDos.isEmpty()){
+            List<String> ids = snapshotDos.stream().map(SnapshotDo::getId).collect(Collectors.toList());
+            SqliteUtil.deleteById(ids);
+        }
+        Iterator<SnapshotDo> iterator = snapshotDos.iterator();
+        while(iterator.hasNext()){
+            SnapshotDo snapshotDo = iterator.next();
+            boolean offer = QueueService.queue.offer(snapshotDo);
+            //如果加入队列失败 就把剩下的重新入库
+            if(!offer){
+                SqliteUtil.batchInsertSnapshotDoList(snapshotDos);
+            }else{
+                iterator.remove();
+            }
+        }
+    }
 }
