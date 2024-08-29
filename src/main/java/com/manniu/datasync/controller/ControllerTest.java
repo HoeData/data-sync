@@ -18,6 +18,12 @@ public class ControllerTest {
     @Autowired
     private SyncDataServiceSend syncDataServiceSend;
 
+
+    @GetMapping("/test")
+    public String test() throws InterruptedException {
+        Thread.sleep(5000);
+        return "连接成功";
+    }
     /**
      * 接收文件
      * @param file
@@ -55,7 +61,7 @@ public class ControllerTest {
         }
     }
 
-    @GetMapping("test")
+   /* @GetMapping("test")
     public String test(){
         syncDataServiceSend.sendFile(new File("F:\\file_test\\525f6b8f602011ef999e00155d14fa1b\\2023.rar"),"525f6b8f602011ef999e00155d14fa1b");
         return "test";
@@ -64,5 +70,5 @@ public class ControllerTest {
     public String dingshi(){
         syncDataServiceSend.compensateFile();
         return "dingshi";
-    }
+    }*/
 }

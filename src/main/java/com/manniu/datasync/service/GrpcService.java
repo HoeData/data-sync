@@ -13,6 +13,7 @@ import com.manniu.datasync.doMain.SnapshotDo;
 import com.manniu.datasync.sqlite.SqliteUtil;
 import com.manniu.datasync.util.ThreadPoolUtil;
 import lombok.Data;
+import lombok.extern.log4j.Log4j2;
 import org.example.Base.Requst;
 import org.example.Entity.*;
 import org.example.Impl.IDataService;
@@ -24,10 +25,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZoneOffset;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.function.Function;
@@ -35,6 +33,7 @@ import java.util.stream.Collectors;
 
 @Data
 @Component
+@Log4j2
 public class GrpcService implements CommandLineRunner {
     @Value("${manniu.grpc.local.ip}")
     private String grpcIp;
@@ -69,12 +68,16 @@ public class GrpcService implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        webClient = WebClient.builder().baseUrl("http://" + httpRemoteIp + ":" + httpRemotePort).defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE).build();
+        webClient = WebClient.builder().baseUrl("http://" + httpRemoteIp + ":" + httpRemotePort)
+                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                .build();
         //获取GRPC连接
         IDataService dataService = getDataService();
         Tablestate<List<Table>> listTablestate = dataService.getTableImpl().GetAllTables();
         List<Table> result = listTablestate.getResult();
-        result = result.subList(0,1);
+        Table testTable = new Table();
+        testTable.setTableName("T9998");
+        result = Arrays.asList(testTable);
         for (Table table : result) {
             BidirectionalSnapshots snapshots = new BidirectionalSnapshots();
             snapshots.setTagName("^"+table.getTableName()+"\\..+?$");
@@ -87,6 +90,7 @@ public class GrpcService implements CommandLineRunner {
         }
         //单独开启一个子线程去消费
         new Thread(()->{
+            log.info("开始消费队列");
             while (true){
                 List<SnapshotDo> snapshotDos = new ArrayList<>();
                 //转移的数量
@@ -102,10 +106,11 @@ public class GrpcService implements CommandLineRunner {
                     successNumber++;
                 }
                 //处理或者发送这批同步的数据
+                log.info("批量消费数量满了，开始消费");
                 doSendHeadquarters(snapshotDos);
             }
         }).start();
-        System.out.println("初始化成功");
+        log.info("初始化成功");
     }
 
 
@@ -211,6 +216,7 @@ public class GrpcService implements CommandLineRunner {
                 .bodyValue(json.toString())
                 .retrieve()
                 .bodyToMono(String.class)
+                .timeout(Duration.ofSeconds(10))
                 .onErrorResume(e -> Mono.just("error"));
         String block = result.block();
         //成功发送并且拿到请求了
@@ -255,6 +261,8 @@ public class GrpcService implements CommandLineRunner {
         if(!snapshotDos.isEmpty()){
             List<String> ids = snapshotDos.stream().map(SnapshotDo::getId).collect(Collectors.toList());
             SqliteUtil.deleteById(ids);
+        }else{
+            return;
         }
         Iterator<SnapshotDo> iterator = snapshotDos.iterator();
         while(iterator.hasNext()){
