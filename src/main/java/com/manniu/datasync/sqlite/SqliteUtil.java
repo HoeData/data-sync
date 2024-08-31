@@ -1,12 +1,14 @@
 package com.manniu.datasync.sqlite;
 
 import com.manniu.datasync.doMain.SnapshotDo;
+import lombok.extern.log4j.Log4j2;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Log4j2
 public class SqliteUtil {
 
     private static Integer sqliteSize = 50;
@@ -57,8 +59,9 @@ public class SqliteUtil {
             }
             return result;
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            log.error("批量新增数据报错，查询报错");
         }
+        return new ArrayList<>();
     }
     public static void batchInsertSnapshotDoList(List<SnapshotDo> param){
         synchronized (SqliteUtil.class){
@@ -78,7 +81,7 @@ public class SqliteUtil {
                 }
                 ps.executeBatch();
             } catch (SQLException e) {
-                throw new RuntimeException(e);
+                log.error("批量新增数据报错,报错数量{}",param.size());
             }
         }
     }
@@ -95,7 +98,7 @@ public class SqliteUtil {
                 }
                 ps.executeUpdate();
             } catch (SQLException e) {
-                throw new RuntimeException(e);
+                log.error("删除报错,报错数量{}",ids.size());
             }
         }
     }
