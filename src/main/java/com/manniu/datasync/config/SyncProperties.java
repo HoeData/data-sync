@@ -10,7 +10,6 @@ import org.springframework.stereotype.Component;
 public class SyncProperties {
     private String ip;
     private Integer port;
-
     private String saveFile;
 
 }

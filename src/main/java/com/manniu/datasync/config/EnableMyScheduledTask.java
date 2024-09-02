@@ -7,7 +7,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 @Component
-@ConditionalOnProperty(name = "manniu.task.enable", havingValue = "true")
+@ConditionalOnProperty(name = "manniu.datasync.enable", havingValue = "true")
 public class EnableMyScheduledTask {
 
     @Autowired

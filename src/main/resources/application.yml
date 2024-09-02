@@ -14,16 +14,16 @@ manniu:
     ip: 127.0.0.1
     port: 8080
     saveFile: F:\sjzx
+    #是否定时重新同步文件（船舶给中心同步  船舶 true 中心 false)
+    enable: false
 #    saveFile: F:\file_test\
+  #当前订阅的的目标GRPC
   grpc:
     local:
       ip: 192.168.0.223
       port: 5001
+  # 中台同步数据  的目标IP以及端口  后期可能是域名之类的
   http:
     remote:
-      ip: 192.168.0.209
+      ip: 192.168.0.208
       port: 5000
-  task:
-    enable: false
-server:
-  port: 9999
