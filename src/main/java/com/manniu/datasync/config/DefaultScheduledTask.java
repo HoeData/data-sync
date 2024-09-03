@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.manniu.datasync.entity.SyncFile;
 import com.manniu.datasync.service.SyncFileService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -13,6 +14,7 @@ import java.time.ZoneId;
 import java.util.List;
 
 @Component
+@ConditionalOnProperty(name = "manniu.datasync.enable", havingValue = "true")
 public class DefaultScheduledTask {
     @Autowired
     private SyncFileService syncFileService;
