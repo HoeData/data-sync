@@ -33,8 +33,6 @@ public class SyncDataServiceSendImp implements SyncDataServiceSend {
     private SyncFileDetailService  syncFileDetailService;
     @Autowired
     private WebClient webClient;
-    @Autowired
-    private GrpcService grpcService;
 
 
     @Transactional

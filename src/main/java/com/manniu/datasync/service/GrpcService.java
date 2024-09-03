@@ -19,6 +19,7 @@ import org.example.Entity.*;
 import org.example.Impl.IDataService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -35,6 +36,8 @@ import java.util.stream.Collectors;
 @Data
 @Component
 @Log4j2
+//只有在传播端在进行初始化
+@ConditionalOnProperty(name = "manniu.datasync.enable", havingValue = "true")
 public class GrpcService implements CommandLineRunner {
     @Value("${manniu.grpc.local.ip}")
     private String grpcIp;
@@ -52,7 +55,8 @@ public class GrpcService implements CommandLineRunner {
     //当前时区
     private ZoneOffset zoneOffset = ZoneId.systemDefault().getRules().getOffset(Instant.now());
     private DateTimeFormatter sf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
-    private Integer batchSize = 2;
+    @Value("${manniu.queue.batchSize:100}")
+    private Integer batchSize;
 
     public static HashMap<String, BidirectionalSnapshots> bidirectionalSnapshotsMap = new HashMap<>();
 

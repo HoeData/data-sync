@@ -13,7 +13,7 @@ manniu:
   datasync:
     ip: 127.0.0.1
     port: 8080
-    saveFile: F:\sjzx
+    saveFile: F:\cbfile\
     #是否定时重新同步文件（船舶给中心同步  船舶 true 中心 false)
     enable: false
 #    saveFile: F:\file_test\
@@ -27,3 +27,8 @@ manniu:
     remote:
       ip: 192.168.0.208
       port: 5000
+  #中台定期发送的批次数量
+    queue:
+      batchSize: 10
+server:
+  port: 9999

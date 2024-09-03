@@ -2,6 +2,7 @@ package com.manniu.datasync.config;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.manniu.datasync.entity.SyncFile;
+import com.manniu.datasync.service.SyncDataServiceSend;
 import com.manniu.datasync.service.SyncFileService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -14,16 +15,16 @@ import java.time.ZoneId;
 import java.util.List;
 
 @Component
-@ConditionalOnProperty(name = "manniu.datasync.enable", havingValue = "true")
 public class DefaultScheduledTask {
     @Autowired
     private SyncFileService syncFileService;
+
 
     /**
      * 定期检查文件是否上传或者合并完毕 把分割的文件进行删除
      */
     @Scheduled(cron = "0 0 0 15 * ?")
-    public void compensateFile(){
+    public void clearCache(){
         //只清理近期一个月的
         LocalDateTime endTime = LocalDateTime.now();
         LocalDateTime startTime = endTime.minusMonths(1);
@@ -46,6 +47,8 @@ public class DefaultScheduledTask {
 
         }
     }
+
+
 
     private void recursionDeleteFile(File directory){
         if(!directory.exists()){

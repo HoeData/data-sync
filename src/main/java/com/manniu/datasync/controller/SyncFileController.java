@@ -9,19 +9,16 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
-
 @RestController
-public class ControllerTest {
+public class SyncFileController {
     @Autowired
     private SyncDataServiceReceive syncDataServiceReceive;
     @Autowired
     private SyncDataServiceSend syncDataServiceSend;
 
 
-    @GetMapping("/test")
-    public String test() throws InterruptedException {
-        Thread.sleep(5000);
+    @GetMapping("/syncData/test")
+    public String test(){
         return "连接成功";
     }
     /**
@@ -60,15 +57,4 @@ public class ControllerTest {
             return "error";
         }
     }
-
-   /* @GetMapping("test")
-    public String test(){
-        syncDataServiceSend.sendFile(new File("F:\\file_test\\525f6b8f602011ef999e00155d14fa1b\\2023.rar"),"525f6b8f602011ef999e00155d14fa1b");
-        return "test";
-    }
-    @GetMapping("dingshi")
-    public String dingshi(){
-        syncDataServiceSend.compensateFile();
-        return "dingshi";
-    }*/
 }
