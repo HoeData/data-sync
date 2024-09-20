@@ -55,7 +55,7 @@ public class GrpcService implements CommandLineRunner {
     //当前时区
     private ZoneOffset zoneOffset = ZoneId.systemDefault().getRules().getOffset(Instant.now());
     private DateTimeFormatter sf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
-    @Value("${manniu.queue.batchSize:100}")
+    @Value("${manniu.http.queue.batchSize:100}")
     private Integer batchSize;
 
     public static HashMap<String, BidirectionalSnapshots> bidirectionalSnapshotsMap = new HashMap<>();
@@ -81,7 +81,7 @@ public class GrpcService implements CommandLineRunner {
         Tablestate<List<Table>> listTablestate = dataService.getTableImpl().GetAllTables();
         List<Table> result = listTablestate.getResult();
         Table testTable = new Table();
-        testTable.setTableName("T9998");
+        testTable.setTableName("YCONE");
         result = Arrays.asList(testTable);
         for (Table table : result) {
             BidirectionalSnapshots snapshots = new BidirectionalSnapshots();
