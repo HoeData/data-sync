@@ -22,9 +22,8 @@ public class CommonUtil {
         if(!splitFile.exists()){
             splitFile.mkdirs();
         }
-        try {
-            //根据长度进行读取文件
-            RandomAccessFile randomAccessFile = new RandomAccessFile(file,"r");
+        try (//根据长度进行读取文件
+             RandomAccessFile randomAccessFile = new RandomAccessFile(file,"r")){
             //计算要分割多少次
             long splitTime = file.length()/splitSize;
             if(file.length()%splitSize!=0){
